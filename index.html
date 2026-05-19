@@ -1,0 +1,490 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>AExplorer - Minimal Rust File Explorer</title>
+
+  <style>
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+    }
+
+    :root {
+      --bg: #0d1117;
+      --card: #161b22;
+      --card2: #1f2937;
+      --text: #e6edf3;
+      --muted: #9ca3af;
+      --accent: #3b82f6;
+      --accent2: #60a5fa;
+      --border: #30363d;
+      --green: #22c55e;
+    }
+
+    body {
+      font-family: Inter, system-ui, sans-serif;
+      background: var(--bg);
+      color: var(--text);
+      overflow-x: hidden;
+      line-height: 1.6;
+    }
+
+    a {
+      text-decoration: none;
+      color: inherit;
+    }
+
+    .hero {
+      min-height: 100vh;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      padding: 4rem 2rem;
+      position: relative;
+    }
+
+    .hero::before {
+      content: "";
+      position: absolute;
+      inset: 0;
+      background:
+        radial-gradient(circle at top left, rgba(59,130,246,0.25), transparent 30%),
+        radial-gradient(circle at bottom right, rgba(96,165,250,0.2), transparent 30%);
+      z-index: -1;
+    }
+
+    .container {
+      max-width: 1200px;
+      width: 100%;
+    }
+
+    .hero-content {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 4rem;
+      align-items: center;
+    }
+
+    .badge {
+      display: inline-block;
+      background: rgba(59,130,246,0.12);
+      color: var(--accent2);
+      border: 1px solid rgba(59,130,246,0.3);
+      padding: 0.4rem 0.9rem;
+      border-radius: 999px;
+      font-size: 0.9rem;
+      margin-bottom: 1.5rem;
+    }
+
+    h1 {
+      font-size: clamp(3rem, 8vw, 6rem);
+      line-height: 0.95;
+      margin-bottom: 1.5rem;
+      font-weight: 900;
+    }
+
+    .gradient {
+      background: linear-gradient(to right, #60a5fa, #3b82f6);
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+    }
+
+    .hero p {
+      color: var(--muted);
+      font-size: 1.15rem;
+      max-width: 600px;
+      margin-bottom: 2rem;
+    }
+
+    .buttons {
+      display: flex;
+      gap: 1rem;
+      flex-wrap: wrap;
+    }
+
+    .btn {
+      padding: 0.9rem 1.5rem;
+      border-radius: 14px;
+      font-weight: 700;
+      transition: 0.2s;
+      cursor: pointer;
+    }
+
+    .btn-primary {
+      background: var(--accent);
+      color: white;
+    }
+
+    .btn-primary:hover {
+      transform: translateY(-2px);
+      background: var(--accent2);
+    }
+
+    .btn-secondary {
+      border: 1px solid var(--border);
+      background: var(--card);
+    }
+
+    .btn-secondary:hover {
+      background: var(--card2);
+    }
+
+    .terminal {
+      background: #000;
+      border-radius: 20px;
+      overflow: hidden;
+      border: 1px solid var(--border);
+      box-shadow: 0 20px 60px rgba(0,0,0,0.4);
+    }
+
+    .terminal-top {
+      background: #111827;
+      padding: 0.8rem 1rem;
+      display: flex;
+      gap: 0.5rem;
+      border-bottom: 1px solid #222;
+    }
+
+    .dot {
+      width: 12px;
+      height: 12px;
+      border-radius: 50%;
+    }
+
+    .red { background: #ef4444; }
+    .yellow { background: #eab308; }
+    .green { background: #22c55e; }
+
+    .terminal-body {
+      padding: 1.5rem;
+      font-family: monospace;
+      color: #22c55e;
+      min-height: 350px;
+      font-size: 0.95rem;
+    }
+
+    .section {
+      padding: 6rem 2rem;
+    }
+
+    .section-title {
+      text-align: center;
+      margin-bottom: 4rem;
+    }
+
+    .section-title h2 {
+      font-size: 3rem;
+      margin-bottom: 1rem;
+    }
+
+    .section-title p {
+      color: var(--muted);
+      max-width: 700px;
+      margin: auto;
+    }
+
+    .grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+      gap: 2rem;
+    }
+
+    .card {
+      background: var(--card);
+      border: 1px solid var(--border);
+      padding: 2rem;
+      border-radius: 24px;
+      transition: 0.2s;
+    }
+
+    .card:hover {
+      transform: translateY(-6px);
+      border-color: var(--accent);
+    }
+
+    .card h3 {
+      margin-bottom: 1rem;
+      font-size: 1.4rem;
+    }
+
+    .card p {
+      color: var(--muted);
+    }
+
+    .stats {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+      gap: 1.5rem;
+      margin-top: 4rem;
+    }
+
+    .stat {
+      background: var(--card);
+      padding: 2rem;
+      border-radius: 20px;
+      text-align: center;
+      border: 1px solid var(--border);
+    }
+
+    .stat h2 {
+      font-size: 3rem;
+      color: var(--accent2);
+    }
+
+    .requirements {
+      background: var(--card);
+      border-radius: 24px;
+      padding: 2rem;
+      border: 1px solid var(--border);
+      max-width: 800px;
+      margin: auto;
+    }
+
+    .requirements ul {
+      margin-top: 1rem;
+      padding-left: 1.2rem;
+    }
+
+    .requirements li {
+      margin: 0.8rem 0;
+      color: var(--muted);
+    }
+
+    footer {
+      text-align: center;
+      padding: 3rem 2rem;
+      color: var(--muted);
+      border-top: 1px solid var(--border);
+      margin-top: 4rem;
+    }
+
+    .line {
+      opacity: 0;
+      transform: translateY(10px);
+      animation: fade 0.4s forwards;
+    }
+
+    @keyframes fade {
+      to {
+        opacity: 1;
+        transform: translateY(0);
+      }
+    }
+
+    @media(max-width: 900px) {
+      .hero-content {
+        grid-template-columns: 1fr;
+      }
+
+      h1 {
+        font-size: 4rem;
+      }
+    }
+  </style>
+</head>
+<body>
+
+  <section class="hero">
+    <div class="container hero-content">
+
+      <div>
+        <div class="badge">
+          ⚡ Minimal Rust File Explorer
+        </div>
+
+        <h1>
+          Meet <span class="gradient">AExplorer</span>
+        </h1>
+
+        <p>
+          AExplorer is a ridiculously lightweight terminal file explorer written in Rust.
+          No bloated dependencies. No massive configs. No unnecessary garbage.
+          Just fast navigation, file management, and pure simplicity in only
+          <strong>209 fucking lines</strong> of code.
+        </p>
+
+        <div class="buttons">
+          <a href="#features" class="btn btn-primary">
+            Explore Features
+          </a>
+
+          <a href="#requirements" class="btn btn-secondary">
+            Requirements
+          </a>
+        </div>
+      </div>
+
+      <div class="terminal">
+        <div class="terminal-top">
+          <div class="dot red"></div>
+          <div class="dot yellow"></div>
+          <div class="dot green"></div>
+        </div>
+
+        <div class="terminal-body" id="terminal-output">
+        </div>
+      </div>
+
+    </div>
+  </section>
+
+  <section class="section" id="features">
+    <div class="container">
+
+      <div class="section-title">
+        <h2>Why AExplorer?</h2>
+
+        <p>
+          Most terminal file explorers try to become entire operating systems.
+          AExplorer focuses on doing one thing properly:
+          exploring files quickly with almost zero overhead.
+        </p>
+      </div>
+
+      <div class="grid">
+
+        <div class="card">
+          <h3>⚡ Extremely Lightweight</h3>
+          <p>
+            Unlike terminal explorers like nnn, yazi, ranger, and similar tools,
+            AExplorer avoids giant ecosystems, plugin systems, Lua scripting,
+            previews, and unnecessary complexity.
+          </p>
+        </div>
+
+        <div class="card">
+          <h3>🦀 Written in Rust</h3>
+          <p>
+            Safe, fast, and memory efficient. Rust gives AExplorer native-level
+            performance while keeping the codebase clean and reliable.
+          </p>
+        </div>
+
+        <div class="card">
+          <h3>📁 Core File Management</h3>
+          <p>
+            Navigate directories, create folders, create files, delete files,
+            and open files directly in your editor through the EDITOR environment variable.
+          </p>
+        </div>
+
+        <div class="card">
+          <h3>🔥 209 Lines</h3>
+          <p>
+            That's it. The whole thing is only 209 lines long.
+            Tiny codebase. Easy to understand. Easy to modify.
+            No giant code jungle.
+          </p>
+        </div>
+
+      </div>
+
+      <div class="stats">
+
+        <div class="stat">
+          <h2>209</h2>
+          <p>Lines of Code</p>
+        </div>
+
+        <div class="stat">
+          <h2>0</h2>
+          <p>External Crates</p>
+        </div>
+
+        <div class="stat">
+          <h2>Fast</h2>
+          <p>Startup Time</p>
+        </div>
+
+        <div class="stat">
+          <h2>Rust</h2>
+          <p>Powered</p>
+        </div>
+
+      </div>
+
+    </div>
+  </section>
+
+  <section class="section" id="requirements">
+
+    <div class="container">
+
+      <div class="section-title">
+        <h2>Requirements</h2>
+
+        <p>
+          AExplorer is designed to work with almost nothing installed.
+        </p>
+      </div>
+
+      <div class="requirements">
+        <h3>Needed</h3>
+
+        <ul>
+          <li>Rust compiler</li>
+          <li>Terminal</li>
+          <li>EDITOR environment variable</li>
+          <li>Operating system</li>
+          <li>file system (optional)</li>
+        </ul>
+      </div>
+
+    </div>
+
+  </section>
+
+  <footer>
+    <p>
+      AExplorer — tiny, fast, and built for people who just want a file explorer that works.
+    </p>
+  </footer>
+
+  <script>
+    const lines = [
+      "/home/user",
+      "0. ../",
+      "1. 📁 Documents",
+      "2. 📁 Projects",
+      "3. 📄 notes.txt",
+      "4. 📄 main.rs",
+      "",
+      "Enter (q. exit, a. create directory, f. create file, d. delete): ",
+      "> 2",
+      "",
+      "/home/user/Projects",
+      "0. ../",
+      "1. 📁 AExplorer",
+      "2. 📄 Cargo.toml",
+      "",
+      "> _"
+    ];
+
+    const terminal = document.getElementById("terminal-output");
+
+    let i = 0;
+
+    function addLine() {
+      if (i >= lines.length) return;
+
+      const div = document.createElement("div");
+      div.className = "line";
+      div.style.animationDelay = `${i * 0.05}s`;
+      div.textContent = lines[i];
+
+      terminal.appendChild(div);
+
+      terminal.scrollTop = terminal.scrollHeight;
+
+      i++;
+      setTimeout(addLine, 150);
+    }
+
+    addLine();
+  </script>
+
+</body>
+</html>
