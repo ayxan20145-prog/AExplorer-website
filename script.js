@@ -40,3 +40,22 @@ function addLine() {
 }
 
 addLine();
+
+// --- Added Functionality: Flatpak Click-to-Copy ---
+function copyFlatpakCommand() {
+  const commandText = document.getElementById("flatpak-cmd").innerText;
+  
+  navigator.clipboard.writeText(commandText).then(() => {
+    const copyBtn = document.querySelector(".btn-copy");
+    copyBtn.innerText = "Copied!";
+    copyBtn.style.background = "var(--accent)";
+    
+    // Reset button design after 2 seconds
+    setTimeout(() => {
+      copyBtn.innerText = "Copy";
+      copyBtn.style.background = "var(--card2)";
+    }, 2000);
+  }).catch(err => {
+    console.error("Failed to copy command: ", err);
+  });
+}
