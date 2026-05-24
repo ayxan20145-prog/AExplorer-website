@@ -6,7 +6,6 @@ const lines = [
   "3. 📄 notes.txt",
   "4. 📄 main.rs",
   "",
-  "Enter (q. exit, a. create directory, f. create file, d. delete): ",
   "> 2",
   "",
   "/home/user/Projects",
